@@ -215,9 +215,8 @@ static Flake readFlake(
     auto flakeDir = rootDir / CanonPath(resolvedRef.subdir);
     auto flakePath = flakeDir / "flake.nix";
 
-    // NOTE evalFile forces vInfo to be an attrset because mustBeTrivial is true.
     Value vInfo;
-    state.evalFile(flakePath, vInfo, true);
+    state.evalFile(flakePath, vInfo, false);
 
     Flake flake {
         .originalRef = originalRef,
