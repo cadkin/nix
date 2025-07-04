@@ -42,16 +42,10 @@ static StorePath copyInputToStore(
     return storePath;
 }
 
-static void forceTrivialValue(EvalState & state, Value & value, const PosIdx pos)
-{
-    if (value.isThunk() && value.isTrivial())
-        state.forceValue(value, pos);
-}
-
 static void expectType(EvalState & state, ValueType type,
     Value & value, const PosIdx pos)
 {
-    forceTrivialValue(state, value, pos);
+    state.forceValue(value, pos);
     if (value.type() != type)
         throw Error("expected %s but got %s at %s",
             showType(type), showType(value.type()), state.positions[pos]);
@@ -121,7 +115,7 @@ static FlakeInput parseFlakeInput(
     for (auto & attr : *value->attrs()) {
         try {
             if (attr.name == sUrl) {
-                forceTrivialValue(state, *attr.value, pos);
+                state.forceValue(*attr.value, pos);
                 if (attr.value->type() == nString)
                     url = attr.value->string_view();
                 else if (attr.value->type() == nPath) {
@@ -268,7 +262,7 @@ static Flake readFlake(
         expectType(state, nAttrs, *nixConfig->value, nixConfig->pos);
 
         for (auto & setting : *nixConfig->value->attrs()) {
-            forceTrivialValue(state, *setting.value, setting.pos);
+            state.forceValue(*setting.value, setting.pos);
             if (setting.value->type() == nString)
                 flake.config.settings.emplace(
                     state.symbols[setting.name],
